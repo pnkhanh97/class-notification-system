@@ -149,7 +149,7 @@ export async function getScheduleRows(): Promise<ScheduleRow[]> {
     idKhoaHoc:      cell(row, idxOf(h, 'ID Khoá học')),
     idBuoiHoc:      cell(row, idxOf(h, 'ID Buổi học')),
     idBuoiHocChiTiet: cell(row, idxOf(h, 'ID Buổi học Chi tiết')),
-    ngayHoc:        cell(row, idxOf(h, 'Ngày học')),
+    ngayHoc:        cell(row, idxOf(h, 'Thời gian học')),
     idNganh:        cell(row, idxOf(h, 'ID Ngành')),
     hocPhan:        cell(row, idxOf(h, 'Học phần')),
     noiDungHoc:     cell(row, idxOf(h, 'Nội dung học')),

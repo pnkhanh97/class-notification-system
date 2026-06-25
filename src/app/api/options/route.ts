@@ -36,7 +36,7 @@ export async function GET() {
       const h = shifts.headers;
       return {
         value: cell(r, h.indexOf('Ca học')),
-        label: cell(r, h.indexOf('Ca học - Giờ học')),
+        label: cell(r, h.indexOf('Ca học')),
       };
     }).filter(o => o.value);
 
