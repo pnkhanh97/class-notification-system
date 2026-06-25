@@ -352,12 +352,12 @@ export default function ScheduleForm({ initial, rowNumber, mode }: Props) {
 
       <Field label="Học viên" hint={selectedLevels.length ? `lọc theo ${selectedLevels.join(', ')}` : 'toàn bộ staff'}>
         <MultiSelect value={form.hocVien} onChange={set('hocVien')}
-          options={hocVienOpts} placeholder="-- Chọn học viên --" />
+          options={hocVienOpts} placeholder="-- Chọn học viên --" allowPaste />
       </Field>
 
       <Field label="Học viên đã đăng ký">
         <MultiSelect value={form.hocVienDangKy} onChange={set('hocVienDangKy')}
-          options={opts.staff} placeholder="-- Chọn học viên đã đăng ký --" />
+          options={opts.staff} placeholder="-- Chọn học viên đã đăng ký --" allowPaste />
       </Field>
 
       {/* === Địa điểm & Meet === */}
