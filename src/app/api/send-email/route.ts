@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         }
 
         const courseLabel = courseMap[row.idKhoaHoc]?.courseLabel ?? row.idKhoaHoc;
-        const isInviteOnly = !!row.idBuoiHocChiTiet && row.idBuoiHocChiTiet.endsWith('-0');
+        const isInviteOnly = !row.idCaHoc;
 
         const mailData = {
           idKhoaHoc: row.idKhoaHoc,
