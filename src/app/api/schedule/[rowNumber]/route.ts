@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getScheduleRows, getSheetData, updateRow } from '@/lib/sheets';
+import { getScheduleRows, updateRow } from '@/lib/sheets';
 import { SCHEDULE_SHEET } from '@/lib/constants';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ rowNumber: string }> }) {
@@ -10,7 +10,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ rowNumbe
 
     const rows = await getScheduleRows();
     const existing = rows.find(r => r.rowNumber === rn);
-    const stt = rn - 1; // row 2 = STT 1
+    const stt = rn - 1;
 
     const values = [
       stt,
@@ -32,8 +32,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ rowNumbe
       body.idTinhChat       ?? '',
       body.idDiaChi         ?? '',
       body.meetLink         ?? '',
-      '',  // ParticipantsProcessed — giữ nguyên
-      existing?.emailSent ?? '',
+      '',                           // ParticipantsProcessed
+      '',                           // CalendarEventID
+      existing?.emailSent ?? '',    // EmailSent — giữ nguyên
+      existing?.ngayTao   ?? '',    // Ngày tạo — giữ nguyên
     ];
 
     await updateRow(SCHEDULE_SHEET, rn, values);

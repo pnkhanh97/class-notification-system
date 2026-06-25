@@ -119,6 +119,7 @@ export type ScheduleRow = {
   idDiaChi: string;
   meetLink: string;
   emailSent: string;
+  ngayTao: string;
 };
 
 export type StaffRow = {
@@ -165,6 +166,7 @@ export async function getScheduleRows(): Promise<ScheduleRow[]> {
     idDiaChi:       cell(row, idxOf(h, 'ID Địa chỉ')),
     meetLink:       cell(row, idxOf(h, 'MeetLink')),
     emailSent:      cell(row, idxOf(h, 'EmailSent')),
+    ngayTao:        cell(row, idxOf(h, 'Ngày tạo')),
   }));
 }
 

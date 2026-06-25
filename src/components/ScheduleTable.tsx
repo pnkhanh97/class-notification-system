@@ -15,32 +15,69 @@ type ScheduleRow = {
   hocVienDangKy: string;
   meetLink: string;
   emailSent: string;
+  ngayTao: string;
 };
+
+type SortKey = 'ngayTao' | 'idBuoiHocChiTiet';
+type SortDir = 'asc' | 'desc';
 
 type Props = {
   rows: ScheduleRow[];
-  shiftsMap: Record<string, string>; // key: Ca học value, label: Ca học - Giờ học
+  shiftsMap: Record<string, string>;
   onSendEmail: (rowNumbers: number[]) => Promise<void>;
   onRefresh: () => void;
 };
+
+function parseViDate(s: string): number {
+  if (!s) return 0;
+  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  if (!m) return 0;
+  return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime();
+}
 
 export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh }: Props) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [sending, setSending] = useState(false);
   const [sendAll, setSendAllLoading] = useState(false);
   const [filter, setFilter] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('ngayTao');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const filtered = rows.filter(r => {
-    const q = filter.toLowerCase();
-    return (
-      !q ||
-      r.idBuoiHoc.toLowerCase().includes(q) ||
-      r.ngayHoc.toLowerCase().includes(q) ||
-      r.noiDungHoc.toLowerCase().includes(q) ||
-      r.giaoVien.toLowerCase().includes(q) ||
-      r.hocVien.toLowerCase().includes(q)
-    );
-  });
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+  };
+
+  const sortIcon = (key: SortKey) => {
+    if (sortKey !== key) return <span className="text-gray-300 ml-1">↕</span>;
+    return <span className="text-[#03A680] ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  const filtered = rows
+    .filter(r => {
+      const q = filter.toLowerCase();
+      return (
+        !q ||
+        r.idBuoiHoc.toLowerCase().includes(q) ||
+        r.ngayHoc.toLowerCase().includes(q) ||
+        r.noiDungHoc.toLowerCase().includes(q) ||
+        r.giaoVien.toLowerCase().includes(q) ||
+        r.hocVien.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'ngayTao') {
+        cmp = parseViDate(a.ngayTao) - parseViDate(b.ngayTao);
+      } else {
+        cmp = a.idBuoiHocChiTiet.localeCompare(b.idBuoiHocChiTiet);
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
 
   const toggleRow = (rn: number) => {
     setSelected(prev => {
@@ -84,7 +121,6 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <input
           type="text"
@@ -119,7 +155,6 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -132,20 +167,31 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
                   className="rounded"
                 />
               </th>
-              <th className="px-3 py-3 text-left font-semibold text-gray-700">ID Buổi học Chi tiết</th>
+              <th
+                className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
+                onClick={() => toggleSort('idBuoiHocChiTiet')}
+              >
+                ID Buổi học Chi tiết {sortIcon('idBuoiHocChiTiet')}
+              </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Ca học</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Nội dung</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Giáo viên</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Học viên</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Meet</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Email</th>
+              <th
+                className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
+                onClick={() => toggleSort('ngayTao')}
+              >
+                Ngày tạo {sortIcon('ngayTao')}
+              </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-3 py-8 text-center text-gray-400">Không có dữ liệu</td>
+                <td colSpan={10} className="px-3 py-8 text-center text-gray-400">Không có dữ liệu</td>
               </tr>
             )}
             {filtered.map(row => (
@@ -193,6 +239,9 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
                       Chưa gửi
                     </span>
                   )}
+                </td>
+                <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
+                  {row.ngayTao || '—'}
                 </td>
                 <td className="px-3 py-3">
                   <a href={`/schedule/${row.rowNumber}`}

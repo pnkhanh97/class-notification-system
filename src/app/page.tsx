@@ -16,6 +16,7 @@ type ScheduleRow = {
   hocVienDangKy: string;
   meetLink: string;
   emailSent: string;
+  ngayTao: string;
 };
 
 type SendResult = {
