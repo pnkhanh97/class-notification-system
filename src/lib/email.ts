@@ -66,8 +66,8 @@ export function buildHtmlEmail(data: MailData): string {
   function row(label: string, value: string): string {
     if (!value) return '';
     return `<tr>
-      <td style="padding:12px 14px;border:1px solid #d9e7e4;background:#f4fbfa;width:180px;font-weight:700;color:#0f172a;">${escapeHtml(label)}</td>
-      <td style="padding:12px 14px;border:1px solid #d9e7e4;color:#0f172a;">${value}</td>
+      <td style="padding:10px 12px;border:1px solid #d9e7e4;background:#f4fbfa;width:30%;min-width:90px;max-width:140px;font-weight:700;color:#0f172a;word-break:break-word;vertical-align:top;">${escapeHtml(label)}</td>
+      <td style="padding:10px 12px;border:1px solid #d9e7e4;color:#0f172a;word-break:break-word;vertical-align:top;">${value}</td>
     </tr>`;
   }
 
