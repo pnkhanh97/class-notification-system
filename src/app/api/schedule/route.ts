@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getScheduleRows, appendRow } from '@/lib/sheets';
+import { getScheduleRows, getSheetData, appendRow } from '@/lib/sheets';
 import { SCHEDULE_SHEET } from '@/lib/constants';
 
 export async function GET() {
@@ -11,25 +11,44 @@ export async function GET() {
   }
 }
 
+// Ghi đúng thứ tự cột trong Sheet Schedule:
+// STT | ID Khoá học | ID Buổi học | ID Buổi học Chi tiết | Ngày học |
+// ID Ngành | Học phần | Nội dung học | Mã khoá | ID Ca học |
+// Ghi chú ca học | ID Quy mô | Giáo viên | Đối tượng học |
+// Học viên | Học viên đã đăng ký | ID Tính chất | ID Địa chỉ | MeetLink | (skip computed) | EmailSent
+function buildRowValues(body: Record<string, string>, stt: string | number = '') {
+  return [
+    stt,
+    body.idKhoaHoc       ?? '',
+    body.idBuoiHoc       ?? '',
+    body.idBuoiHocChiTiet ?? '',
+    body.ngayHoc         ?? '',
+    body.idNganh         ?? '',
+    body.hocPhan         ?? '',
+    body.noiDungHoc      ?? '',
+    body.maKhoa          ?? '',
+    body.idCaHoc         ?? '',
+    body.ghiChuCaHoc     ?? '',
+    body.idQuyMo         ?? '',
+    body.giaoVien        ?? '',
+    body.doiTuongHoc     ?? '',
+    body.hocVien         ?? '',
+    body.hocVienDangKy   ?? '',
+    body.idTinhChat      ?? '',
+    body.idDiaChi        ?? '',
+    body.meetLink        ?? '',
+  ];
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const values = [
-      body.idKhoaHoc ?? '',
-      body.idBuoiHoc ?? '',
-      body.idBuoiHocChiTiet ?? '',
-      body.idCaHoc ?? '',
-      body.ghiChuCaHoc ?? '',
-      body.ngayHoc ?? '',
-      body.hocPhan ?? '',
-      body.noiDungHoc ?? '',
-      body.tinhChat ?? '',
-      body.giaoVien ?? '',
-      body.hocVien ?? '',
-      body.hocVienDangKy ?? '',
-      body.meetLink ?? '',
-      '', // EmailSent — trống khi tạo mới
-    ];
+
+    // Tính STT tự động
+    const existing = await getScheduleRows();
+    const stt = existing.length + 1;
+
+    const values = buildRowValues(body, stt);
     await appendRow(SCHEDULE_SHEET, values);
     return NextResponse.json({ success: true });
   } catch (err) {

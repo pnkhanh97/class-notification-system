@@ -7,21 +7,24 @@ type ScheduleRow = {
   idKhoaHoc: string;
   idBuoiHoc: string;
   idBuoiHocChiTiet: string;
+  idCaHoc: string;
   ngayHoc: string;
   noiDungHoc: string;
   giaoVien: string;
   hocVien: string;
+  hocVienDangKy: string;
   meetLink: string;
   emailSent: string;
 };
 
 type Props = {
   rows: ScheduleRow[];
+  shiftsMap: Record<string, string>; // key: Ca học value, label: Ca học - Giờ học
   onSendEmail: (rowNumbers: number[]) => Promise<void>;
   onRefresh: () => void;
 };
 
-export default function ScheduleTable({ rows, onSendEmail, onRefresh }: Props) {
+export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh }: Props) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [sending, setSending] = useState(false);
   const [sendAll, setSendAllLoading] = useState(false);
@@ -129,8 +132,8 @@ export default function ScheduleTable({ rows, onSendEmail, onRefresh }: Props) {
                   className="rounded"
                 />
               </th>
-              <th className="px-3 py-3 text-left font-semibold text-gray-700">ID Buổi học</th>
-              <th className="px-3 py-3 text-left font-semibold text-gray-700">Thời gian</th>
+              <th className="px-3 py-3 text-left font-semibold text-gray-700">ID Buổi học Chi tiết</th>
+              <th className="px-3 py-3 text-left font-semibold text-gray-700">Ca học</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Nội dung</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Giáo viên</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Học viên</th>
@@ -155,13 +158,23 @@ export default function ScheduleTable({ rows, onSendEmail, onRefresh }: Props) {
                     className="rounded"
                   />
                 </td>
-                <td className="px-3 py-3 font-mono text-xs text-gray-600">
-                  {row.idBuoiHocChiTiet || row.idBuoiHoc}
+                <td className="px-3 py-3 font-mono text-xs">
+                  <a href={`/schedule/${row.rowNumber}/view`}
+                     className="text-[#03A680] hover:underline">
+                    {row.idBuoiHocChiTiet || row.idBuoiHoc}
+                  </a>
                 </td>
-                <td className="px-3 py-3 whitespace-pre-line text-xs text-gray-600">{row.ngayHoc}</td>
+                <td className="px-3 py-3 text-xs text-gray-600">
+                  {row.idCaHoc ? ((shiftsMap ?? {})[row.idCaHoc] ?? row.idCaHoc) : '—'}
+                </td>
                 <td className="px-3 py-3 max-w-[200px] truncate text-gray-800">{row.noiDungHoc}</td>
                 <td className="px-3 py-3 text-xs text-gray-600">{row.giaoVien}</td>
-                <td className="px-3 py-3 text-xs text-gray-600">{row.hocVien}</td>
+                <td className="px-3 py-3 text-xs text-gray-600">
+                  {[row.hocVien, row.hocVienDangKy]
+                    .flatMap(v => (v ? v.split(',').map(s => s.trim()) : []))
+                    .filter((v, i, a) => v && a.indexOf(v) === i)
+                    .join(', ')}
+                </td>
                 <td className="px-3 py-3">
                   {row.meetLink ? (
                     <a href={row.meetLink} target="_blank" rel="noopener noreferrer"

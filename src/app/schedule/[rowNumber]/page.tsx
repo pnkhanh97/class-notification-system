@@ -22,19 +22,24 @@ export default async function EditSchedulePage({ params }: Props) {
           mode="edit"
           rowNumber={rn}
           initial={{
-            idKhoaHoc: row.idKhoaHoc,
-            idBuoiHoc: row.idBuoiHoc,
+            idKhoaHoc:        row.idKhoaHoc,
+            idBuoiHoc:        row.idBuoiHoc,
             idBuoiHocChiTiet: row.idBuoiHocChiTiet,
-            idCaHoc: row.idCaHoc,
-            ghiChuCaHoc: row.ghiChuCaHoc,
-            ngayHoc: row.ngayHoc,
-            hocPhan: row.hocPhan,
-            noiDungHoc: row.noiDungHoc,
-            tinhChat: row.tinhChat,
-            giaoVien: row.giaoVien,
-            hocVien: row.hocVien,
-            hocVienDangKy: row.hocVienDangKy,
-            meetLink: row.meetLink,
+            ngayHoc:          row.ngayHoc,
+            idNganh:          row.idNganh,
+            hocPhan:          row.hocPhan,
+            noiDungHoc:       row.noiDungHoc,
+            maKhoa:           row.maKhoa,
+            idCaHoc:          row.idCaHoc,
+            ghiChuCaHoc:      row.ghiChuCaHoc,
+            idQuyMo:          row.idQuyMo,
+            giaoVien:         row.giaoVien,
+            doiTuongHoc:      row.doiTuongHoc,
+            hocVien:          row.hocVien,
+            hocVienDangKy:    row.hocVienDangKy,
+            idTinhChat:       row.idTinhChat,
+            idDiaChi:         row.idDiaChi,
+            meetLink:         row.meetLink,
           }}
         />
       </div>

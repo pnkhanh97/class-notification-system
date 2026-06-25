@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getScheduleRows, getStaffMap, getCourseMap, markEmailSent } from '@/lib/sheets';
+import { getScheduleRows, getStaffMap, getCourseMap, markEmailSent, getSheetData } from '@/lib/sheets';
 import { buildSubject, buildHtmlEmail, buildPlainEmail, sendMail } from '@/lib/email';
 import { parseEnumList, unique, normalizeEmail } from '@/lib/schedule-utils';
 
@@ -9,11 +9,25 @@ export async function POST(req: Request) {
     // rowNumbers: number[] — nếu trống thì gửi tất cả chưa gửi
     const targetRows: number[] = body.rowNumbers ?? [];
 
-    const [scheduleRows, staffMap, courseMap] = await Promise.all([
+    const [scheduleRows, staffMap, courseMap, facetsData] = await Promise.all([
       getScheduleRows(),
       getStaffMap(),
       getCourseMap(),
+      getSheetData('facets'),
     ]);
+
+    // Map: Mã tính chất → Tính chất (VD: "A" → "Lý thuyết")
+    const facetMap: Record<string, string> = {};
+    if (facetsData.length > 1) {
+      const h = facetsData[0];
+      const maIdx   = h.indexOf('Mã tính chất');
+      const tenIdx  = h.indexOf('Tính chất');
+      facetsData.slice(1).forEach(row => {
+        const ma  = String(row[maIdx]  ?? '').trim();
+        const ten = String(row[tenIdx] ?? '').trim();
+        if (ma) facetMap[ma] = ten;
+      });
+    }
 
     const toProcess = scheduleRows.filter(r => {
       if (!r.idBuoiHoc) return false;
@@ -51,7 +65,7 @@ export async function POST(req: Request) {
           thoiGianHoc: row.ngayHoc,
           hocPhan: row.hocPhan,
           noiDungHoc: row.noiDungHoc,
-          tinhChat: row.tinhChat,
+          tinhChat: facetMap[row.idTinhChat] ?? row.idTinhChat,
           giaoVienNames: giaoVienIds.map(id => staffMap[id]?.staffName ?? id).filter(Boolean),
           hocVienNames: hocVienIds.map(id => staffMap[id]?.staffName ?? id).filter(Boolean),
           meetLink: row.meetLink,
