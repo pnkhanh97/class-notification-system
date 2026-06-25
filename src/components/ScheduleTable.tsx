@@ -30,9 +30,13 @@ type Props = {
 
 function parseViDate(s: string): number {
   if (!s) return 0;
-  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
-  if (!m) return 0;
-  return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime();
+  // format mới: dd/mm/yyyy, hh:mm
+  const m1 = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  if (m1) return new Date(+m1[3], +m1[2] - 1, +m1[1], +m1[4], +m1[5]).getTime();
+  // format cũ vi-VN: hh:mm:ss dd/m/yyyy
+  const m2 = s.match(/(\d{1,2}):(\d{2}):\d{2}\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m2) return new Date(+m2[5], +m2[4] - 1, +m2[3], +m2[1], +m2[2]).getTime();
+  return 0;
 }
 
 export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh }: Props) {
