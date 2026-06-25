@@ -1,11 +1,19 @@
 import { google } from 'googleapis';
 import { SCHEDULE_SHEET, STAFF_SHEET, COURSES_SHEET } from './constants';
+import { cached, invalidate } from './cache';
+
+// Sheet tĩnh (facets, shifts, staff...) cache 5 phút
+const STATIC_TTL = 5 * 60 * 1000;
+// Schedule cache 30 giây
+const SCHEDULE_TTL = 30 * 1000;
+
+const STATIC_SHEETS = ['facets', 'shifts', 'address', 'courseID_Input', 'staff', 'lessons', 'courses', STAFF_SHEET, COURSES_SHEET];
 
 function getAuth() {
   return new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').replace(/\\\\n/g, '\n'),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
@@ -17,13 +25,23 @@ function getSheetsClient() {
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 
-export async function getSheetData(sheetName: string): Promise<string[][]> {
+async function fetchSheetData(sheetName: string): Promise<string[][]> {
   const sheets = getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: sheetName,
   });
   return (res.data.values as string[][]) || [];
+}
+
+export async function getSheetData(sheetName: string): Promise<string[][]> {
+  const ttl = STATIC_SHEETS.includes(sheetName) ? STATIC_TTL : SCHEDULE_TTL;
+  return cached(`sheet:${sheetName}`, ttl, () => fetchSheetData(sheetName));
+}
+
+// Xoá cache Schedule sau khi ghi (append/update)
+function invalidateSchedule() {
+  invalidate(`sheet:${SCHEDULE_SHEET}`);
 }
 
 export async function appendRow(sheetName: string, values: unknown[]): Promise<void> {
@@ -34,6 +52,7 @@ export async function appendRow(sheetName: string, values: unknown[]): Promise<v
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [values] },
   });
+  invalidateSchedule();
 }
 
 export async function updateCell(
@@ -50,6 +69,7 @@ export async function updateCell(
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [[value]] },
   });
+  invalidateSchedule();
 }
 
 export async function updateRow(
@@ -65,6 +85,7 @@ export async function updateRow(
     valueInputOption: 'USER_ENTERED',
     requestBody: { values: [values] },
   });
+  invalidateSchedule();
 }
 
 function columnToLetter(col: number): string {
@@ -82,15 +103,20 @@ export type ScheduleRow = {
   idKhoaHoc: string;
   idBuoiHoc: string;
   idBuoiHocChiTiet: string;
-  idCaHoc: string;
-  ghiChuCaHoc: string;
   ngayHoc: string;
+  idNganh: string;
   hocPhan: string;
   noiDungHoc: string;
-  tinhChat: string;
+  maKhoa: string;
+  idCaHoc: string;
+  ghiChuCaHoc: string;
+  idQuyMo: string;
   giaoVien: string;
+  doiTuongHoc: string;
   hocVien: string;
   hocVienDangKy: string;
+  idTinhChat: string;
+  idDiaChi: string;
   meetLink: string;
   emailSent: string;
 };
@@ -120,20 +146,25 @@ export async function getScheduleRows(): Promise<ScheduleRow[]> {
   const h = data[0];
   return data.slice(1).map((row, i) => ({
     rowNumber: i + 2,
-    idKhoaHoc: cell(row, idxOf(h, 'ID Khoá học')),
-    idBuoiHoc: cell(row, idxOf(h, 'ID Buổi học')),
+    idKhoaHoc:      cell(row, idxOf(h, 'ID Khoá học')),
+    idBuoiHoc:      cell(row, idxOf(h, 'ID Buổi học')),
     idBuoiHocChiTiet: cell(row, idxOf(h, 'ID Buổi học Chi tiết')),
-    idCaHoc: cell(row, idxOf(h, 'ID Ca học')),
-    ghiChuCaHoc: cell(row, idxOf(h, 'Ghi chú ca học')),
-    ngayHoc: cell(row, idxOf(h, 'Ngày học')),
-    hocPhan: cell(row, idxOf(h, 'Học phần')),
-    noiDungHoc: cell(row, idxOf(h, 'Nội dung học')),
-    tinhChat: cell(row, idxOf(h, 'Tính chất')),
-    giaoVien: cell(row, idxOf(h, 'Giáo viên')),
-    hocVien: cell(row, idxOf(h, 'Học viên')),
-    hocVienDangKy: cell(row, idxOf(h, 'Học viên đã đăng ký')),
-    meetLink: cell(row, idxOf(h, 'MeetLink')),
-    emailSent: cell(row, idxOf(h, 'EmailSent')),
+    ngayHoc:        cell(row, idxOf(h, 'Ngày học')),
+    idNganh:        cell(row, idxOf(h, 'ID Ngành')),
+    hocPhan:        cell(row, idxOf(h, 'Học phần')),
+    noiDungHoc:     cell(row, idxOf(h, 'Nội dung học')),
+    maKhoa:         cell(row, idxOf(h, 'Mã khoá')),
+    idCaHoc:        cell(row, idxOf(h, 'ID Ca học')),
+    ghiChuCaHoc:    cell(row, idxOf(h, 'Ghi chú ca học')),
+    idQuyMo:        cell(row, idxOf(h, 'ID Quy mô')),
+    giaoVien:       cell(row, idxOf(h, 'Giáo viên')),
+    doiTuongHoc:    cell(row, idxOf(h, 'Đối tượng học')),
+    hocVien:        cell(row, idxOf(h, 'Học viên')),
+    hocVienDangKy:  cell(row, idxOf(h, 'Học viên đã đăng ký')),
+    idTinhChat:     cell(row, idxOf(h, 'ID Tính chất')),
+    idDiaChi:       cell(row, idxOf(h, 'ID Địa chỉ')),
+    meetLink:       cell(row, idxOf(h, 'MeetLink')),
+    emailSent:      cell(row, idxOf(h, 'EmailSent')),
   }));
 }
 
