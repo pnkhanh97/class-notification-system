@@ -169,6 +169,12 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
               </th>
               <th
                 className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
+                onClick={() => toggleSort('ngayTao')}
+              >
+                Ngày tạo {sortIcon('ngayTao')}
+              </th>
+              <th
+                className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
                 onClick={() => toggleSort('idBuoiHocChiTiet')}
               >
                 ID Buổi học Chi tiết {sortIcon('idBuoiHocChiTiet')}
@@ -179,12 +185,6 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Học viên</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Meet</th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700">Email</th>
-              <th
-                className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
-                onClick={() => toggleSort('ngayTao')}
-              >
-                Ngày tạo {sortIcon('ngayTao')}
-              </th>
               <th className="px-3 py-3 text-left font-semibold text-gray-700"></th>
             </tr>
           </thead>
@@ -204,6 +204,9 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
                     className="rounded"
                   />
                 </td>
+                <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
+                  {row.ngayTao || '—'}
+                </td>
                 <td className="px-3 py-3 font-mono text-xs">
                   <a href={`/schedule/${row.rowNumber}/view`}
                      className="text-[#03A680] hover:underline">
@@ -216,10 +219,20 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
                 <td className="px-3 py-3 max-w-[200px] truncate text-gray-800">{row.noiDungHoc}</td>
                 <td className="px-3 py-3 text-xs text-gray-600">{row.giaoVien}</td>
                 <td className="px-3 py-3 text-xs text-gray-600">
-                  {[row.hocVien, row.hocVienDangKy]
-                    .flatMap(v => (v ? v.split(',').map(s => s.trim()) : []))
-                    .filter((v, i, a) => v && a.indexOf(v) === i)
-                    .join(', ')}
+                  {(() => {
+                    const all = [row.hocVien, row.hocVienDangKy]
+                      .flatMap(v => (v ? v.split(',').map(s => s.trim()) : []))
+                      .filter((v, i, a) => v && a.indexOf(v) === i);
+                    const shown = all.slice(0, 10);
+                    return (
+                      <>
+                        {shown.join(', ')}
+                        {all.length > 10 && (
+                          <> <a href={`/schedule/${row.rowNumber}/view`} className="text-[#03A680] hover:underline">Xem thêm</a></>
+                        )}
+                      </>
+                    );
+                  })()}
                 </td>
                 <td className="px-3 py-3">
                   {row.meetLink ? (
@@ -239,9 +252,6 @@ export default function ScheduleTable({ rows, shiftsMap, onSendEmail, onRefresh 
                       Chưa gửi
                     </span>
                   )}
-                </td>
-                <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
-                  {row.ngayTao || '—'}
                 </td>
                 <td className="px-3 py-3">
                   <a href={`/schedule/${row.rowNumber}`}
