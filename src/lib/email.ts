@@ -57,9 +57,8 @@ function enumToText(value: string): string {
 }
 
 export function buildSubject(data: MailData): string {
-  const idPart = data.isInviteOnly ? data.idBuoiHoc : data.idBuoiHocChiTiet;
-  const base = data.noiDungHoc || idPart || 'Thông tin buổi học';
-  return '[ABC Academy] ' + base;
+  const base = data.isInviteOnly ? data.idBuoiHoc : data.idBuoiHocChiTiet;
+  return '[ABC Academy] ' + (base || 'Thông tin buổi học');
 }
 
 export function buildHtmlEmail(data: MailData): string {
