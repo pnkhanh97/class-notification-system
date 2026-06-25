@@ -112,7 +112,6 @@ export function buildHtmlEmail(data: MailData): string {
         ${data.giaoVienNames.length ? row('Giáo viên', escapeHtml(data.giaoVienNames.join(', '))) : ''}
         ${data.isInviteOnly ? row('Form đăng ký ca học', `<a href="${escapeHtml(REGISTRATION_FORM_URL)}" target="_blank" style="color:#03A680;text-decoration:none;font-weight:700;">Đăng ký tại đây</a>`) : ''}
         ${data.hocVienNames.length ? row('Học viên', escapeHtml(data.hocVienNames.join(', '))) : ''}
-        ${formRow}
       </table>
       ${meetSection}
       <p style="margin:20px 0 0 0;color:#64748b;font-size:13px;line-height:1.6;">Email này được gửi tự động từ hệ thống đào tạo.</p>
